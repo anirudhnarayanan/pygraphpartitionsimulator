@@ -154,8 +154,42 @@ def snap_main(*args):
 
             content = file1.readlines(32)
             
+            
             for line in content:
-                location.put(i, int(line))
+                location[i] = int(line)
+                counts[int(line)] +=1
+
+            print " " 
+            for i in range(32):
+                print counts[i] + " " 
+
+            fullset = set(generated)
+            numEdges = len(fullset)
+
+            total_cut = 0
+
+            for e in fullset:
+                src = e.src
+                dest = e.dest
+
+                src_loc = locations.get(src)
+                dest_loc = locations.get(dest)
+
+                if not src_loc == dst_loc:
+                    total_cut += 1
+
+
+            print "discl.ttu.edu.MetisMain Total Cuts: " + total_cut + " Percent: " + float (total_cut) / float( numEdges)
+
+
+
+
+
+
+
+
+
+                
 
 
                      
