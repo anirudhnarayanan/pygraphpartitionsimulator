@@ -1,6 +1,7 @@
 #Main SNAP file. Contains code to call offline and online partitioning algorithms for testing in Python to facilitate use of TensorFlow
 
 import sys
+import math
 
 def snap_main(*args):
     direc = args[1]
@@ -79,6 +80,99 @@ def snap_main(*args):
 
 
     numVertices = max_vid + 1
+
+
+    
+    if op.lower() == "iogp":
+        fullset = set()
+        edgeset = []
+        rev_edgeset = []
+        for edge in generated:
+            edgeset.append(edge)
+
+        rev_edgeset = edgeset[:]
+        rev_edgeset.reverse()
+        fullset = set(edgeset + rev_edgeset)
+
+        Threephase.workload_run(fullset,32)
+
+    if op.lower() == "iogpperf":
+        fullset = set()
+        edgeset = []
+        rev_edgeset = []
+        for edge in generated:
+            edgeset.append(edge)
+
+        rev_edgeset = edgeset[:]
+        rev_edgeset.reverse()
+        fullset = set(edgeset + rev_edgeset)
+
+
+        for thrs in range(1,52,5):
+            reassigned = 0
+            for node in csr:
+                value = csr[node]
+                k = float(len(value)/float(thrs))
+                reassigned += max((math.log(k)/math.log(2)),0)
+                
+            print( "threshold " + thrs + " reassign " + reassigned)
+            Threephase.workload_run_threshold(fullset,thrs)
+                
+
+        Threephase.workload_run(fullset,32)
+
+
+    if op.lower() == "fennel":
+        fullset = set(generated)
+        f = Fennel(csr,reverse_csr,edges,32)
+        f.workload_run_s()
+
+    if op.lower() == "hash":
+        fullset = set(generated)
+        EdgeCutHashing.execute_partition()
+    
+    if op.lower() == "metis":
+        with open(metis_graph_file,"w") as fill:
+            fill.write(numVertices + " " + real_edge_num + "\n")
+        
+            for i in range(max_vid + 1):
+                if not outputs[i] == None:
+                    fill.write(str(outputs[i]).strip() + "\n")
+                else:
+                    fill.write("\n")
+
+    
+    if op.lower() == "metis-count":
+        metis_results = metis_graph_32partition_file
+        with open(metis_results,"r") as file1:
+            line = ""
+            i =0
+            location = {}
+            counts = []
+            for j in range(32);
+                counts[j] = 0
+
+            content = file1.readlines(32)
+            
+            for line in content:
+                location.put(i, int(line))
+
+
+                     
+                
+        
+
+
+
+
+
+
+
+
+
+
+         
+        
         
 
 
