@@ -149,7 +149,7 @@ def snap_main(*args):
             i =0
             location = {}
             counts = []
-            for j in range(32);
+            for j in range(32):
                 counts[j] = 0
 
             content = file1.readlines(32)
@@ -180,6 +180,34 @@ def snap_main(*args):
 
 
             print "discl.ttu.edu.MetisMain Total Cuts: " + total_cut + " Percent: " + float (total_cut) / float( numEdges)
+
+
+        
+        if op.lower() == "tmp":
+            for threshold in range(1,52,5):
+                reassigned = 0
+                for node in csr:
+                    k = float(len(csr[node]))/float(threshold)
+
+                    reassigned += max((math.log(k)/math.log(2)),0) 
+
+
+                print( "threshold " + thrs + " reassign " + reassigned)
+                
+
+        if op.lower() == "dist":
+            for threshold in range(1,52,5):
+                vertex_number =0
+
+                for node in csr:
+                    if len(csr[node]) >= threshold:
+                        vertex_number +=1
+                
+
+                print ("threshold " + threshold + " over: " + vertex_number)
+
+
+
 
 
 
