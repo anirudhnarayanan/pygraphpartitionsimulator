@@ -37,7 +37,7 @@ class GenGraph:
                 fromids = []
                 toids = []
                 rand = random.uniform(0,1)
-                while not row_start == row_end || not col_start == col_end:
+                while not row_start == row_end or not col_start == col_end:
 
                     if rand < quadA:
                         row_end = row_start + (row_end-row_start)/2

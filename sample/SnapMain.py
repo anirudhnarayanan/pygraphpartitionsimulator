@@ -1,7 +1,16 @@
+#!/usr/bin/env python
 #Main SNAP file. Contains code to call offline and online partitioning algorithms for testing in Python to facilitate use of TensorFlow
 
 import sys
 import math
+from Edge import Edge
+from ThreePhase import ThreePhase
+from Vertex import Node
+from Fennel import Fennel
+from hash import EdgeCutHashing
+from gen_graph import GenGraph
+from Directed_Graph import gen_directed
+
 
 def snap_main(*args):
     direc = args[1]
@@ -23,6 +32,7 @@ def snap_main(*args):
         pass
 
     elif gtype.lower() == "directed":
+        generated_nodes = gen_directed(original_graph_file)
         #Create Generated Graph, possbily using multi linked list
         pass
     
@@ -83,6 +93,24 @@ def snap_main(*args):
 
 
     
+    print op
+    if op.lower() == "gengraph":
+        vertices = 10000
+        edges = 1200000
+        pA = 0.45
+        pB = 0.15
+        pC = 0.15
+        pD = 0.25
+
+        generator = GenGraph(pA,pB,pC,pD,vertices,edges)
+        generator.gengraph()
+        print "here"
+
+        with open(original_graph_file,"w") as gengraph:
+            for edge in edges_list:
+                edgenow = edge.src + " " + e.dst + "\n"
+
+
     if op.lower() == "iogp":
         fullset = set()
         edgeset = []
@@ -259,6 +287,11 @@ if __name__ == "__main__":
         """Argument Check, if not enough arguements print Usage"""
         print "Usage %s <dir> <filename> <type> <operation> <initial threshold>"%sys.argv[0]
         sys.exit()
+
+    print type(sys.argv)
+    snap_main(*sys.argv)
+
+
     
 
     

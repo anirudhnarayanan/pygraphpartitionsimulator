@@ -12,11 +12,16 @@ def gen_directed(path):
 
     directed_data = directed_data.split("\n")
 
+    print directed_data
+
 
     node_array = set()
 
+    if len(directed_data) == 1:
+        return 0
+
     for line in directed_data:
-        if not line[0] == "#":
+        if not line == "#":
             split_line = line.split("\\W+")
             node1 = Node(int(split_line[0]))
             node_array.add(node1)
