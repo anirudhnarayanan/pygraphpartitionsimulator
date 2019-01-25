@@ -23,23 +23,23 @@ class ThreePhase:
         return vertex_id%serverNumber   #number of nodes
 
 
-    def insertV(vertex_id):
+    def insertV(self,vertex_id):
         self.v[vertex_id] = set()
         self.local_neighbors[vertex_id] = 0
         self.pointed_to_me[vertex_id] = set()
 
         self.ra[vertex_id] = 1
-        self.loc[vertex_id] = index
+        self.loc[vertex_id] = self.index
         self.split[vertex_id] = False
 
 
-    def insertE(src, dest):
+    def insertE(self,src, dest):
         newEdge = Edge(src,dest)  #create the new edge first
         hash_src = hash(src)   #Hash and find a node for the vertex now
 
         hash_dest = hash(dest)
 
-        dest_serv = cluster[hash_dest].loc[dest] #DESTINATION SERVER finding if it exists in the hash
+        dest_serv = self.cluster[hash_dest].loc[dest] #DESTINATION SERVER finding if it exists in the hash
         
         if not src in cluster[dest_serv].local_neighbors: #local neighbors is saying if the cluster has the node in it or not 
             cluster[dest_serv].local_neighbors[src] = 0 #if it doesn't then allocate it
@@ -160,6 +160,7 @@ class ThreePhase:
         self.MAX_REASSIGN = threshold
         workload_run(edges,32)
 
+    @staticmethod
     def workload_run(edges,cluster_size):
         tota_cut = 0
         total_reassign = 0
@@ -168,13 +169,13 @@ class ThreePhase:
 
         insertedV = []
         splitV = []
-        location = {}
+        locations = {}
 
         cluster = []
 
         #INITIALIZE CLUSTERS
         for i in range(cluster_size):
-            cluster.append(i,ThreePhase(i,cluster,cluster_size))
+            cluster.append(ThreePhase(i,cluster,cluster_size))
 
 
 
@@ -185,16 +186,16 @@ class ThreePhase:
             if e.src == e.dest:
                 continue
 
-            visitEdges.add(e) #Show that the edge has been visited
+            visitedEdges.append(e) #Show that the edge has been visited
 
             #FIRST HANDLE THE VERTICES AND SEE IF THEY WERE INSERTED
             if not e.src in insertedV:
                 cluster[e.src%cluster_size].insertV(e.src)
-                insertedV.add(e.src)
+                insertedV.append(e.src)
 
             if not e.dest in insertedV:
                 cluster[e.dest%cluster_size].insertV(e.src)
-                insertedV.add(e.src)
+                insertedV.append(e.src)
 
             rtn = 0
 
@@ -208,7 +209,7 @@ class ThreePhase:
                 rtn = locations.get(e.src).insertE(e.src,e.dest)
 
             else:
-                rtn = cluster.get(e.src % cluster_size).insertE(e.src,e.dest)
+                rtn = cluster[e.src % cluster_size].insertE(e.src,e.dest)
 
 
             if rtn < 0:

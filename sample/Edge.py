@@ -7,7 +7,7 @@ class Edge:
         self.dest = dest
 
     def toString(self):
-        return "[" + self.src + ", " + self.dst + "]"
+        return "[" + str(self.src) + ", " + str(self.dst) + "]"
     
     def hashCode(self):
         prime = 31

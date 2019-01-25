@@ -26,13 +26,18 @@ def snap_main(*args):
 
     #Creating array of Edges, Possible Linked List implementation
 
+    print "here before gtype check"
+    print gtype.lower()
+
     if gtype.lower() == "undirected":
         #Create Undirected Generated Graph, possbily using multi linked list
         #generated_nodes
         pass
 
     elif gtype.lower() == "directed":
-        generated_nodes = gen_directed(original_graph_file)
+        generated = gen_directed(original_graph_file) #Generated Edges
+        print "reaches directed"
+        #print generated
         #Create Generated Graph, possbily using multi linked list
         pass
     
@@ -48,8 +53,10 @@ def snap_main(*args):
     numVertices = 0
     real_edge_num = 0;
 
+    """
     temp_gen_nodes = generated_nodes.copy() #for verification and removal temporarily
-    """CSR and Reverse CSR Maintain nodes in a way, where it is a hashed table containing the value as a set of all it's edges (destination vertices). Also this is bidirectiona."""
+    CSR and Reverse CSR Maintain nodes in a way, where it is a hashed table containing the value as a set of all it's edges (destination vertices). Also this is bidirectiona.
+    
     for node in temp_generated_nodes:
         temp_node = node.getData()
         if node.getData() > max_vid:
@@ -65,31 +72,57 @@ def snap_main(*args):
 
         for dest_node in node.next.keys():
             csr[temp_node].add(dest_node)
+    """
+    for edge in generated:
+        print "here"
+        if edge.src == edge.dest: #if the edge points to itself, then it isn't considered
+            print "equal"
+            continue
+        
+        if max(edge.src,edge.dest) > max_vid:
+            print "max vid exceeded"
+            max_vid = max(edge.src,edge.dest)
+
+        if not edge.src in csr:
+            csr[edge.src] = set()
+        if not edge.dest in csr:
+            csr[edge.dest] = set()
+
+        if not edge.src in reverse_csr:
+            reverse_csr[edge.src] = set()
+        if not edge.dest in reverse_csr:
+            reverse_csr[edge.dest] = set()
+
+        real_edge_num +=1
+
         
 
-    print "CSR KEY SIZE: " + len(csr.keys())
+    print "CSR KEY SIZE: " + str(len(csr.keys()))
 
 
-    outputs = [None]*max_vid+1
+    outputs = [None]*(max_vid+1)
 
     for node in range(max_vid+1):
         if node in csr.keys():
-            outputs[i] = ""
+            outputs[node] = ""
             dest_nodes = csr[node]
 
             for item in dest_nodes:
-                outputs[i] = str(item) + " "
+                outputs[node] = str(item) + " "
         
         if node in reverse_csr.keys():
-            if outputs[i] is not None:
-                outputs[i] = ""
+            if outputs[node] is not None:
+                outputs[node] = ""
             dest_nodes = csr[node]
 
             for item in dest_nodes:
-                outputs[i] = str(item) + " "
+                outputs[node] = str(item) + " "
 
 
     numVertices = max_vid + 1
+
+    print numVertices
+
 
 
     
@@ -122,7 +155,7 @@ def snap_main(*args):
         rev_edgeset.reverse()
         fullset = set(edgeset + rev_edgeset)
 
-        Threephase.workload_run(fullset,32)
+        ThreePhase.workload_run(fullset,32)
 
     if op.lower() == "iogpperf":
         fullset = set()
