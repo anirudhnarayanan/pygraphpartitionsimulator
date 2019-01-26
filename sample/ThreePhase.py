@@ -20,12 +20,14 @@ class ThreePhase:
         self.index = index
 
     def hash_v(self,vertex_id):
-        print "server number"
-        print self.serverNumber
+        #print "server number"
+        #print self.serverNumber
         return vertex_id%self.serverNumber   #number of nodes
 
 
     def insertV(self,vertex_id):
+        print "Inserted Vertex",vertex_id
+        print self.index
         self.v[vertex_id] = set()
         self.local_neighbors[vertex_id] = 0
         self.pointed_to_me[vertex_id] = set()
@@ -36,9 +38,11 @@ class ThreePhase:
 
 
     def insertE(self,src, dest):
+        print "insert edge"
         newEdge = Edge(src,dest)  #create the new edge first
         print 'reaches hash src'
         hash_src = self.hash_v(src)   #Hash and find a node for the vertex now
+        print src,dest
         print "hash src"
         print hash_src
 
@@ -47,12 +51,12 @@ class ThreePhase:
         print hash_dest
 
         print self.cluster
-        dest_serv = self.cluster[hash_dest].loc.get(dest) #DESTINATION SERVER finding if it exists in the hash
+        dest_serv = self.cluster[hash_dest].loc[dest] #DESTINATION SERVER finding if it exists in the hash
         
         if not src in self.cluster[dest_serv].local_neighbors: #local neighbors is saying if the cluster has the node in it or not 
             self.cluster[dest_serv].local_neighbors[src] = 0 #if it doesn't then allocate it
         
-        cluster[dest_serv].local_neighbors[src] +=1 #FIXME find a way to do an atomic increment
+        self.cluster[dest_serv].local_neighbors[src] +=1 #FIXME find a way to do an atomic increment
         
         #IMP the loc could be the same as the cluster.get , but they vary in that if the true location has/had been changed , then the record will only reflect in loc.
         if not dest in self.pointed_to_me: #to arrange for bidirectional flow
@@ -63,7 +67,7 @@ class ThreePhase:
 
         #vertex has been split
 
-        if cluster[hash_src].split[src] == True: #DOUBTS if the hashed src has been split
+        if self.cluster[hash_src].split[src] == True: #DOUBTS if the hashed src has been split
             # We request the source server, and check that if the part(destination) which has been split, is in this server or not
             if not hash[dest] == self.index:    #if we are requesting the wrong server as in it has been split, and the current server is not the one which has been split and allocated
                 return 1
@@ -78,25 +82,25 @@ class ThreePhase:
 
         #Vertex removed but client still requests old location
 
-        if not cluster[hash_src].loc[src] == self.index:   #if the hashed source location contains a different source location than the server requested
+        if not self.cluster[hash_src].loc[src] == self.index:   #if the hashed source location contains a different source location than the server requested
             #requesting old node
-            return -1-cluster[hash_src].loc[src]    #over there the code does -1 - (-1 -server) = server
+            return -1-self.cluster[hash_src].loc[src]    #over there the code does -1 - (-1 -server) = server
 
         else:
-            v[src].add(newEdge)     #else add the edge
+            self.v[src].add(newEdge)     #else add the edge
             return 0
 
         #REASSIGNING VERTICES
-        if len(self.v.keys()) >= (MAX_REASSIGN*cluster[hash_src].ra[src]):   #CLARIFY, checking if the lhe number of vertices is too much, and reassigning
-            cluster.get(hash_src).ra[src] = cluster.get(hash_src).ra[src]*2 #CLARIFY
+        if len(self.v.keys()) >= (MAX_REASSIGN*self.cluster[hash_src].ra[src]):   #CLARIFY, checking if the lhe number of vertices is too much, and reassigning
+            self.cluster.get(hash_src).ra[src] = self.cluster.get(hash_src).ra[src]*2 #CLARIFY
 
-            from_node = cluster.get(hash_src).loc.get(src) #GET THE LOC OF THE FROM NODE
-            neighbors = cluster.get(from_node).v.get(src)  #GET ITS EDGES
+            from_node = self.cluster.get(hash_src).loc.get(src) #GET THE LOC OF THE FROM NODE
+            neighbors = self.cluster.get(from_node).v.get(src)  #GET ITS EDGES
             max_server = from_node   #best we can do now is our server itself
             fennel_score = sys.maxint
             
             local_fennel = 0
-            for part in cluster:
+            for part in self.cluster:
                 neigh_factor = 0
 
                 if src in part.local_neighbours: #Checks if it has any neighbors with src also whether it is in it's list of nodes
@@ -111,30 +115,30 @@ class ThreePhase:
 
 
             if not max_server == from_node:  #DOUBT if the best possible is not our own server, then.. 
-                mov_edges = cluster.get(from_node).v.get(src)  #EDGES TO MOVE
-                cluster.get(from_node).v.pop(src)  #REMOVE THE SOURCE ITSELF
+                mov_edges = self.cluster.get(from_node).v.get(src)  #EDGES TO MOVE
+                self.cluster.get(from_node).v.pop(src)  #REMOVE THE SOURCE ITSELF
 
 
-                cluster.get(hash_src).loc[src] = max_server  #CHANGE IT IN THE HASHED SOURCE
-                cluster.get(max_server).v[src] = mov_edges   #MOVE THE EDGES ELSEWHERE
+                self.cluster.get(hash_src).loc[src] = max_server  #CHANGE IT IN THE HASHED SOURCE
+                self.cluster.get(max_server).v[src] = mov_edges   #MOVE THE EDGES ELSEWHERE
 
                 self.reassigntimes = self.reassigntimes + 1  #We have reassigned this elsewhere
 
 
-                if src in cluster.get(from_node).pointed_to_me:  
-                    for vtmp in cluster.get(from_node).pointed_to_me.get(src): #for all the servers pointed to the source which is to be moved
-                        if not vtmp in cluster.get(from_node).local_neighbors: #DOUBT SHOULDN'T IT BE SET TO 0 ?? if the node pointed to src isn't there on that server, then, set that one to 0
-                            cluster.get(from_node).local_neighbors[vtmp] = 0 #FIXME ATOMIC
+                if src in self.cluster.get(from_node).pointed_to_me:  
+                    for vtmp in self.cluster.get(from_node).pointed_to_me.get(src): #for all the servers pointed to the source which is to be moved
+                        if not vtmp in self.cluster.get(from_node).local_neighbors: #DOUBT SHOULDN'T IT BE SET TO 0 ?? if the node pointed to src isn't there on that server, then, set that one to 0
+                            self.cluster.get(from_node).local_neighbors[vtmp] = 0 #FIXME ATOMIC
                         
-                        cluster.get(from_node).local_neighbors[vtmp] -=1 #FIXME ATOMIC DECREMENT
+                        self.cluster.get(from_node).local_neighbors[vtmp] -=1 #FIXME ATOMIC DECREMENT
 
 
-                if src in cluster.get(max_server).pointed_to_me:
-                    for vtmp in cluster.get(max_server).pointed_to_me.get(src):
-                        if not vtmp in cluster.get(max_server).local_neighbors:
-                            cluster.get(max_server).local_neighbors[vtmp] = 0 #FIXME ATOMIC
+                if src in self.cluster.get(max_server).pointed_to_me:
+                    for vtmp in self.cluster.get(max_server).pointed_to_me.get(src):
+                        if not vtmp in self.cluster.get(max_server).local_neighbors:
+                            self.cluster.get(max_server).local_neighbors[vtmp] = 0 #FIXME ATOMIC
                         
-                        cluster.get(from_node).local_neighbors[vtmp]+=1
+                        self.cluster.get(from_node).local_neighbors[vtmp]+=1
 
                 return -1-max_server #RELOCATED
 
@@ -143,7 +147,7 @@ class ThreePhase:
         #CHECK SPLIT
 
         if len(self.v.get(src)) > MAX_EDGES: #if it can't take anymore edges
-            cluster.get(src).split[src] = True
+            self.cluster.get(src).split[src] = True
             all_edges = self.v.get(src)  #get list of all my edges
 
             rms = []
@@ -153,11 +157,11 @@ class ThreePhase:
                     rms.add(edge)
 
             for edge in rms:
-                target = cluster.get(self.hash_v(edge.dest))
+                target = self.cluster.get(self.hash_v(edge.dest))
                 target.insertE(edge.src,edge.dest)
                 self.v.get(src).remove(edge)
 
-            cluster.get(hash_src).loc[src] = hash_src  #DOUBT ASK WHY. IT could have relocated right?
+            self.cluster.get(hash_src).loc[src] = hash_src  #DOUBT ASK WHY. IT could have relocated right?
 
             return 1
 
@@ -203,8 +207,8 @@ class ThreePhase:
                 insertedV.append(e.src)
 
             if not e.dest in insertedV:
-                cluster[e.dest%cluster_size].insertV(e.src)
-                insertedV.append(e.src)
+                cluster[e.dest%cluster_size].insertV(e.dest)
+                insertedV.append(e.dest)
 
             rtn = 0
 
@@ -257,11 +261,11 @@ class ThreePhase:
 
             total_cut = 0
 
-            for edge in visited_Edges:
+            for edge in visitedEdges:
                 src = edge.src
                 dest = edge.dest
 
-                if not cluster.get(src%cluster_size).loc(src) == cluster.get(dest%cluster_size).loc(dest):
+                if not cluster[src%cluster_size].loc[src] == cluster[dest%cluster_size].loc[dest]:
                     total_cut +=1
 
 
@@ -274,13 +278,15 @@ class ThreePhase:
             memory = []
 
             for i in range(32):
-                memory[i] =0
+                memory.append(0)
 
 
             for vertex in insertedV:
                 src_temp = vertex%cluster_size
                 actual_src = cluster[src_temp].loc.get(vertex)
                 memory[actual_src] += 2
+                print actual_src
+                print cluster[actual_src].v
                     
                 for neighbor in cluster[actual_src].v.get(src):
                     temp_dest = neighbor.dest
