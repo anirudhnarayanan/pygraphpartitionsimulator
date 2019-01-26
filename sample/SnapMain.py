@@ -74,13 +74,10 @@ def snap_main(*args):
             csr[temp_node].add(dest_node)
     """
     for edge in generated:
-        print "here"
         if edge.src == edge.dest: #if the edge points to itself, then it isn't considered
-            print "equal"
             continue
         
         if max(edge.src,edge.dest) > max_vid:
-            print "max vid exceeded"
             max_vid = max(edge.src,edge.dest)
 
         if not edge.src in csr:

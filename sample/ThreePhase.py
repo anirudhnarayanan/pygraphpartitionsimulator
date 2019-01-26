@@ -19,8 +19,10 @@ class ThreePhase:
         self.serverNumber = num  #number of nodes
         self.index = index
 
-    def hash(vertex_id):
-        return vertex_id%serverNumber   #number of nodes
+    def hash_v(self,vertex_id):
+        print "server number"
+        print self.serverNumber
+        return vertex_id%self.serverNumber   #number of nodes
 
 
     def insertV(self,vertex_id):
@@ -35,14 +37,20 @@ class ThreePhase:
 
     def insertE(self,src, dest):
         newEdge = Edge(src,dest)  #create the new edge first
-        hash_src = hash(src)   #Hash and find a node for the vertex now
+        print 'reaches hash src'
+        hash_src = self.hash_v(src)   #Hash and find a node for the vertex now
+        print "hash src"
+        print hash_src
 
-        hash_dest = hash(dest)
+        hash_dest = self.hash_v(dest)
+        print "hash_dest"
+        print hash_dest
 
-        dest_serv = self.cluster[hash_dest].loc[dest] #DESTINATION SERVER finding if it exists in the hash
+        print self.cluster
+        dest_serv = self.cluster[hash_dest].loc.get(dest) #DESTINATION SERVER finding if it exists in the hash
         
-        if not src in cluster[dest_serv].local_neighbors: #local neighbors is saying if the cluster has the node in it or not 
-            cluster[dest_serv].local_neighbors[src] = 0 #if it doesn't then allocate it
+        if not src in self.cluster[dest_serv].local_neighbors: #local neighbors is saying if the cluster has the node in it or not 
+            self.cluster[dest_serv].local_neighbors[src] = 0 #if it doesn't then allocate it
         
         cluster[dest_serv].local_neighbors[src] +=1 #FIXME find a way to do an atomic increment
         
@@ -141,11 +149,11 @@ class ThreePhase:
             rms = []
 
             for edge in all_edges:  
-                if not hash(edge.dest) == self.index: #if it's hashed elsewhere , then move it there
+                if not self.hash_v(edge.dest) == self.index: #if it's hashed elsewhere , then move it there
                     rms.add(edge)
 
             for edge in rms:
-                target = cluster.get(hash(edge.dest))
+                target = cluster.get(self.hash_v(edge.dest))
                 target.insertE(edge.src,edge.dest)
                 self.v.get(src).remove(edge)
 
@@ -175,6 +183,7 @@ class ThreePhase:
 
         #INITIALIZE CLUSTERS
         for i in range(cluster_size):
+            print "cluster init" 
             cluster.append(ThreePhase(i,cluster,cluster_size))
 
 
@@ -202,13 +211,18 @@ class ThreePhase:
             #RTN is the return value when inserting an edge to gauge whether it has been inserted or not
 
             
+            print "vertices done"
             if e.src in splitV:
-                rtn = cluster.get(e.dest % cluster_size).insertE(e.src,e.dest)
+                print "vertex is split"
+                rtn = cluster[e.dest % cluster_size].insertE(e.src,e.dest)
 
             elif e.src in locations: #if a location is available for it
+                print "We know another location of this vertex"
                 rtn = locations.get(e.src).insertE(e.src,e.dest)
 
             else:
+                print "hashing and inserting"
+                print cluster
                 rtn = cluster[e.src % cluster_size].insertE(e.src,e.dest)
 
 
