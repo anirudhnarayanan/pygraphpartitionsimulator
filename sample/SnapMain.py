@@ -10,6 +10,7 @@ from Fennel import Fennel
 from hash import EdgeCutHashing
 from gen_graph import GenGraph
 from Directed_Graph import gen_directed
+from rantest import *
 
 
 def snap_main(*args):
@@ -142,17 +143,30 @@ def snap_main(*args):
 
 
     if op.lower() == "iogp":
-        fullset = set()
-        edgeset = []
+        fullset = []
+        edgeset = generated
         rev_edgeset = []
-        for edge in generated:
-            edgeset.append(edge)
+        for edge in edgeset:
+            rev_edgeset.append(Edge(edge.dest,edge.src))
 
-        rev_edgeset = edgeset[:]
-        rev_edgeset.reverse()
+
         fullset = set(edgeset + rev_edgeset)
 
+        #remove from
+        """
+        fullset = []
+        for tdata in test_data:
+            fullset.append(Edge(tdata[0],tdata[1]))
+
+
+        for tempe in fullset:
+            print tempe
+
+        """
+        #remove till
+
         ThreePhase.workload_run(fullset,32)
+        return 0
 
     if op.lower() == "iogpperf":
         fullset = set()
